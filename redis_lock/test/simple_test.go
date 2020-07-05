@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-func TestSimpleRedisLock(T *testing.T) {
+func TestSimpleRedisLock(t *testing.T) {
 	var wg sync.WaitGroup
 
 	key := "simple_redis_key"
@@ -22,7 +22,7 @@ func TestSimpleRedisLock(T *testing.T) {
 			//getLock  每个协程最多持有锁5秒  最多重试10次
 			err := simple.GetLock(key, 5, 10)
 			if err != nil {
-				fmt.Printf("routine %d get lock failed: %v", pId, err)
+				t.Errorf("routine %d get lock failed: %v", pId, err)
 			}
 			//sleep for random 模拟持锁的操作事件时间(不操作超时时间5s)
 			rand.Seed(time.Now().Unix())
@@ -32,10 +32,10 @@ func TestSimpleRedisLock(T *testing.T) {
 			//unlock
 			err = simple.UnLock(key)
 			if err != nil {
-				fmt.Printf("routine %d unlock failed: %v", pId, err)
+				t.Errorf("routine %d unlock failed: %v", pId, err)
 			}
 		}(i)
 	}
 	wg.Wait()
-	fmt.Println("done...")
+	t.Log("done...")
 }
