@@ -27,9 +27,10 @@ func GetLock(lockKey string, ex uint, retry int) error {
 		v, err := redisClient.Do("SET", lockKey, ts, "EX", ex, "NX")
 		if err == nil {
 			if v == nil {
+				//锁存在 互斥
 				fmt.Println("get lock failed,retry time: ", i)
 			} else {
-				//锁存在 互斥
+				//获得锁
 				fmt.Println("get lock success")
 				break
 			}
