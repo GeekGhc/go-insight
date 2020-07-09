@@ -1,18 +1,22 @@
 package rdd
 
 import (
+	"fmt"
 	"github.com/gomodule/redigo/redis"
-	"strconv"
 )
 
 //获取锁
-func Lock(rds redis.Conn, key string, timeoutMs uint) (bool, string) {
-	if setNxCmd, err := rds.Do("SET", key, "EX", timeoutMs, "NX"); err == nil {
+func Lock(pool *redis.Pool, key string, timeoutMs uint) error {
+	if setNxCmd, err := pool.Get().Do("SET", key, "EX", timeoutMs, "NX"); err == nil {
 		//写入成功 锁持有时间ex
 		if setNxCmd != nil {
 			//获得锁
-			return true, strconv.FormatInt(int64(timeoutMs), 10)
+			fmt.Println("get lock success")
+			return nil
+		} else {
+			//锁冲突
+			return fmt.Errorf("get lock failed: lock conflict")
 		}
 	}
-	return false, "0"
+	return nil
 }

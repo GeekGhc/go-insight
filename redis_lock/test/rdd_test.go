@@ -1,22 +1,26 @@
 package test
 
 import (
-	"fmt"
+	"flag"
 	"github.com/gomodule/redigo/redis"
-	"go-insight/redis_lock/pkg"
 	"testing"
+	"time"
 )
 
-func NewRedisClient() redis.Conn {
-	redisClient, err := redis.Dial("tcp", pkg.RedisAddr)
-	if err != nil {
-		fmt.Printf("conn to redis err: %v", err)
+var (
+	pool        *redis.Pool
+	redisServer = flag.String("127.0.0.1", ":6379", "")
+)
+
+func newPool(addr string) *redis.Pool {
+	return &redis.Pool{
+		MaxIdle:     3,
+		IdleTimeout: 240 * time.Second,
+		// Dial or DialContext must be set. When both are set, DialContext takes precedence over Dial.
+		Dial: func() (redis.Conn, error) { return redis.Dial("tcp", addr) },
 	}
-	defer redisClient.Close()
-	return redisClient
 }
 
 func TestRddRedisLock(t *testing.T) {
-	//rds := NewRedisClient()
-
+	pool = newPool(*redisServer)
 }
