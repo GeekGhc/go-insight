@@ -31,7 +31,7 @@ func TestRddRedisLock(t *testing.T) {
 		t.Error("get lock failed...")
 	}
 
-	if boolGet := rdd.UnLockSafe(pool, key, 22); !boolGet {
+	if boolGet := rdd.UnLockSafe(pool, key, 5); !boolGet {
 		t.Error("get lock failed...")
 	}
 }
