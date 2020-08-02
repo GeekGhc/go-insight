@@ -3,6 +3,7 @@ package test
 import (
 	"flag"
 	"github.com/gomodule/redigo/redis"
+	"go-insight/redis_lock/pkg/rdd"
 	"testing"
 	"time"
 )
@@ -23,4 +24,11 @@ func newPool(addr string) *redis.Pool {
 
 func TestRddRedisLock(t *testing.T) {
 	pool = newPool(*redisServer)
+	key := "rdd_redis_key"
+
+	//获取锁
+	if err := rdd.Lock(pool, key, 20); err != nil {
+		t.Error("get lock failed...")
+	}
+
 }
