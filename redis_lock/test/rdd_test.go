@@ -27,8 +27,11 @@ func TestRddRedisLock(t *testing.T) {
 	key := "rdd_redis_key"
 
 	//获取锁
-	if err := rdd.Lock(pool, key, 20); err != nil {
+	if err, _ := rdd.Lock(pool, key, 20); err != nil {
 		t.Error("get lock failed...")
 	}
 
+	if boolGet := rdd.UnLockSafe(pool, key, 22); !boolGet {
+		t.Error("get lock failed...")
+	}
 }
