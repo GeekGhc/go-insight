@@ -5,3 +5,7 @@ Go Insight
 Redis 分布式锁
 ### pool
 协程池
+### lru缓存
+- v1:lru 缓存
+- v2:lru 缓存线程安全
+- v3:lru 线程安全支持高并发
