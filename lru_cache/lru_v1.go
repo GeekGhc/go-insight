@@ -2,17 +2,18 @@ package lru_cache
 
 import (
 	"container/list"
+	"errors"
 )
 
-type elem struct {
-	lruPos *list.Element //list element
+type CacheNode struct {
+	key, value interface{}
 }
 
 type LruCache struct {
 	capacity int
 	length   int
-	dataMap  map[interface{}]*elem //hash表
-	lru      *list.List            //节点链表
+	dataMap  map[interface{}]*list.Element //hash表
+	dataList *list.List                    //节点链表
 }
 
 //lru init
@@ -23,34 +24,66 @@ func NewLruCache(maxLength int) *LruCache {
 	return &LruCache{
 		capacity: maxLength,
 		length:   0,
-		dataMap:  make(map[interface{}]*elem),
-		lru:      list.New(),
+		dataMap:  make(map[interface{}]*list.Element),
+		dataList: list.New(),
 	}
 }
 
-func (c *LruCache) Set(key, value interface{}) {
-	if v, ok := c.dataMap[key]; ok {
-		//删除原先list的位置
-		c.deleteLruItem(v.lruPos)
-		//更新到list头部
-		v.lruPos = c.syncLruItem(key)
-		c.dataMap[key] = v
-	}
+func (lru *LruCache) Size() int {
+	return lru.dataList.Len()
 }
 
-func (c *LruCache) deleteLruItem(pos *list.Element) {
-	//删除list
-	c.lru.Remove(pos)
-	//删除hashMap
-	delete(c.dataMap, pos.Value)
-	if c.length >= 0 {
-		c.length--
+func (lru *LruCache) Set(k, v interface{}) error {
+	if lru.dataList == nil {
+		return errors.New("lru is nil")
 	}
-	return
+
+	//存在node
+	if elem, ok := lru.dataMap[k]; ok {
+		elem.Value.(*CacheNode).value = v
+		lru.dataList.MoveToFront(elem)
+		return nil
+	}
+
+	newElem := lru.dataList.PushFront(&CacheNode{k, v})
+	lru.dataMap[k] = newElem
+
+	if lru.dataList.Len() > lru.capacity {
+		//移除最后一个
+		lastElem := lru.dataList.Back()
+		if lastElem == nil {
+			//链表为空
+			return nil
+		}
+		cacheNode := lastElem.Value.(*CacheNode)
+		delete(lru.dataMap, cacheNode.key)
+		lru.dataList.Remove(lastElem)
+	}
+
+	return nil
 }
 
-func (c *LruCache) syncLruItem(key interface{}) (item *list.Element) {
-	item = c.lru.PushFront(key)
-	c.length++
-	return
+func (lru *LruCache) Get(k interface{}) (v interface{}, ret bool, err error) {
+	if lru.dataList == nil {
+		return v, false, errors.New("lru is nil")
+	}
+
+	if elem, ok := lru.dataMap[k]; ok {
+		lru.dataList.PushFront(elem)
+		return elem.Value.(*CacheNode).value, true, nil
+	}
+	return v, false, nil
+}
+
+func (lru *LruCache) Remove(k interface{}) bool {
+	if lru.dataList == nil {
+		return false
+	}
+
+	if elem, ok := lru.dataMap[k]; ok {
+		delete(lru.dataMap, k)
+		lru.dataList.Remove(elem)
+		return true
+	}
+	return false
 }
