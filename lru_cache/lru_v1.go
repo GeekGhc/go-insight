@@ -5,16 +5,17 @@ import (
 	"sync"
 )
 
-type value struct {
+type elem struct {
 	data   []byte
 	lruPos *list.Element
 }
 
 type lruCache struct {
-	maxSize int
-	data    map[interface{}]*value
-	lck     *sync.Mutex
-	lru     *list.List
+	maxSize   int
+	elemCount int
+	data      map[interface{}]*elem //hash表
+	lck       *sync.Mutex
+	lru       *list.List //节点链表
 }
 
 //lru init
@@ -23,9 +24,10 @@ func NewLruCache(maxLength int) *lruCache {
 		return nil
 	}
 	return &lruCache{
-		maxSize: maxLength,
-		data:    make(map[interface{}]*value),
-		lck:     new(sync.Mutex),
-		lru:     list.New(),
+		maxSize:   maxLength,
+		elemCount: 0,
+		data:      make(map[interface{}]*elem),
+		lck:       new(sync.Mutex),
+		lru:       list.New(),
 	}
 }
