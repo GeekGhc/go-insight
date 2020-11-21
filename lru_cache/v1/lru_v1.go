@@ -1,4 +1,4 @@
-package lru_cache
+package v1
 
 import (
 	"container/list"
@@ -17,7 +17,7 @@ type LruCache struct {
 }
 
 //lru init
-func NewLruCache(maxLength int) *LruCache {
+func NewLruCacheV1(maxLength int) *LruCache {
 	if maxLength <= 0 {
 		return nil
 	}
@@ -38,16 +38,18 @@ func (lru *LruCache) Set(k, v interface{}) error {
 		return errors.New("lru is nil")
 	}
 
-	//存在node
+	//map中存在，调整至链表头部
 	if elem, ok := lru.dataMap[k]; ok {
 		elem.Value.(*CacheNode).value = v
 		lru.dataList.MoveToFront(elem)
 		return nil
 	}
 
+	//调整至链表头部，并add to map
 	newElem := lru.dataList.PushFront(&CacheNode{k, v})
 	lru.dataMap[k] = newElem
 
+	//超过capacity 移除最后一个
 	if lru.dataList.Len() > lru.capacity {
 		//移除最后一个
 		lastElem := lru.dataList.Back()
@@ -68,6 +70,7 @@ func (lru *LruCache) Get(k interface{}) (v interface{}, ret bool, err error) {
 		return v, false, errors.New("lru is nil")
 	}
 
+	//当前node调整至链表头部
 	if elem, ok := lru.dataMap[k]; ok {
 		lru.dataList.PushFront(elem)
 		return elem.Value.(*CacheNode).value, true, nil
